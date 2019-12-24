@@ -1,0 +1,16 @@
+[package]
+name = "aoc-2019"
+version = "0.1.0"
+authors = ["Oskar Thornblad <oskar.thornblad@gmail.com>"]
+
+[lib]
+bench = false
+
+[dependencies]
+failure = "0.1.6"
+aoc-runner = "*"
+aoc-runner-derive = "*"
+voca_rs = "*"
+geo = "0.4"
+line_intersection = "0.4.0"
+image = "0.23.0-preview.0"
