@@ -96,7 +96,7 @@ impl Program {
 
     pub fn pointer(&self) -> usize { self.pointer }
 
-    fn set_ints(&self, index: usize, val: i64) -> Program {
+    pub fn set_ints(&self, index: usize, val: i64) -> Program {
         let mut ints: Vec<i64> = vec![];
         for (i, v) in self.ints.iter().enumerate() {
             if i == index {
