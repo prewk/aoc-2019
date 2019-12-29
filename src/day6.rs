@@ -23,7 +23,7 @@ impl Node<'_> {
 }
 
 /// ```
-/// use advent::day_06::{orbits_to_nodes, Orbit, Node};
+/// use aoc_2019::day6::{orbits_to_nodes, Orbit, Node};
 ///
 /// let orbits1 = vec![
 ///     Orbit::new("COM)B").unwrap(),
@@ -146,7 +146,7 @@ pub fn orbits_to_nodes<'a>(orbits: &'a Vec<Orbit>) -> Result<Vec<Node<'a>>, Orbi
 }
 
 /// ```
-/// use advent::day_06::{get_orbit_count, Node};
+/// use aoc_2019::day6::{get_orbit_count, Node};
 ///
 /// //         G - H       J - K - L
 /// //        /           /
@@ -204,7 +204,7 @@ pub struct Orbit {
 impl Orbit {
 
     /// ```
-    /// use advent::day_06::{Orbit, OrbitErr};
+    /// use aoc_2019::day6::{Orbit, OrbitErr};
     ///
     /// assert_eq!(Orbit::new("XLG)95G").unwrap(), Orbit { orbited: "XLG".to_string(), orbiter: "95G".to_string() });
     /// assert_eq!(Orbit::new("XLG_95G"), Err(OrbitErr::ParseError));
@@ -228,7 +228,7 @@ impl Orbit {
 }
 
 /// ```
-/// use advent::day_06::{get_orbits_from_input, Orbit};
+/// use aoc_2019::day6::{get_orbits_from_input, Orbit};
 ///
 /// let s = "XLG)95G\nW3V)ZZ3\nZM3)Q4Q".to_string();
 /// let orbits = get_orbits_from_input(&s);
@@ -246,7 +246,7 @@ pub fn get_orbits_from_input(input: &String) -> Vec<Orbit> {
 }
 
 /// ```
-/// use advent::day_06::{Node, calc_total_orbits};
+/// use aoc_2019::day6::{Node, calc_total_orbits};
 ///
 /// let nodes = vec![
 ///     Node { name: "COM", parent: None },  // 0
@@ -276,7 +276,7 @@ pub fn calc_total_orbits(nodes: &Vec<Node>) -> Result<u64, Error> {
 }
 
 /// ```
-/// use advent::day_06::{get_orbits_from_input, orbits_to_nodes, find_root, traverse_children_until, path_diff, PathDiffFavor, join_diff_paths, trim_ends};
+/// use aoc_2019::day6::{get_orbits_from_input, orbits_to_nodes, find_root, traverse_children_until, path_diff, PathDiffFavor, join_diff_paths, trim_ends};
 ///
 /// //                          YOU
 /// //                         /
@@ -352,7 +352,7 @@ pub fn traverse_children_until<'a>(nodes: &'a Vec<Node>, current: usize, end: us
 }
 
 /// ```
-/// use advent::day_06::trim_ends;
+/// use aoc_2019::day6::trim_ends;
 /// let trimmed = trim_ends(&vec!["A", "B", "C", "D"]);
 /// assert_eq!(trimmed[..], vec!["B", "C"][..]);
 /// ```
@@ -361,7 +361,7 @@ pub fn trim_ends<'a>(subject: &Vec<&'a str>) -> Vec<&'a str> {
 }
 
 /// ```
-/// use advent::day_06::join_diff_paths;
+/// use aoc_2019::day6::join_diff_paths;
 /// let diff1 = vec!["COM", "B", "C", "D", "E", "J", "K", "YOU"];
 /// let diff2 = vec!["COM", "B", "C", "D", "I", "SAN"];
 ///
@@ -411,7 +411,7 @@ pub enum PathDiffFavor {
 }
 
 /// ```
-/// use advent::day_06::{path_diff, PathDiffFavor};
+/// use aoc_2019::day6::{path_diff, PathDiffFavor};
 /// let path1 = vec![
 ///     "A",
 ///     "B",

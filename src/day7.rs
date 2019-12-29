@@ -16,7 +16,7 @@ pub fn get_best_run(map: &HashMap<String, i64>) -> i64 {
 }
 
 /// ```
-/// use advent::day_07::{run_program_with_phase_settings};
+/// use aoc_2019::day7::{run_program_with_phase_settings};
 ///
 /// assert_eq!(43210, run_program_with_phase_settings(
 ///     &vec![3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0],

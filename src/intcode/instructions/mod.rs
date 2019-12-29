@@ -161,7 +161,7 @@ fn int_to_mode(int: i64) -> Result<Mode, ProgramErr> {
 /// +----- Mode Param C
 ///
 /// ```
-/// use advent::intcode::instructions::*;
+/// use aoc_2019::intcode::instructions::*;
 ///
 /// assert_eq!(
 ///     parse_opcode(11101).unwrap(),

@@ -1,6 +1,6 @@
 use std::fmt;
-use failure::_core::fmt::{Formatter, Error, Display};
-use std::collections::{HashSet, HashMap};
+use failure::_core::fmt::{Formatter, Error};
+use std::collections::{HashSet};
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub enum Location {
@@ -14,6 +14,29 @@ pub fn char_to_location(ch: &char) -> Option<Location> {
         '.' => Some(Location::Space),
         _ => None,
     }
+}
+
+pub fn calc_radial_coord(pt: (f64, f64)) -> f64 {
+    (pt.0 * pt.0 + pt.1 * pt.1).sqrt()
+}
+
+pub fn calc_angular_coord(pt: (f64, f64)) -> f64 {
+    pt.0.atan2(pt.1)
+}
+
+/// ```
+/// // . . . p   . . . p
+/// // . . . .   . . ./.
+/// // . O . .   . . O--
+/// // . . . .   . . | .
+///
+/// use aoc_2019::day10::calc_polar_coord;
+/// assert_eq!(calc_polar_coord((1.0, 2.0), (3.0, 0.0)), ((2.0_f64 * 2.0_f64 + 2.0_f64 * 2.0_f64).sqrt(), 135.0));
+/// ```
+pub fn calc_polar_coord(pole: (f64, f64), point: (f64, f64)) -> (f64, f64) {
+    let norm_point = (point.0 - pole.0, point.1 - pole.1);
+
+    (calc_radial_coord(norm_point), (360.0 / (2.0 * std::f64::consts::PI) * calc_angular_coord(norm_point)))
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -36,52 +59,63 @@ impl Map {
         self.locations.get((self.width * y) + x).map(|loc| *loc)
     }
 
+    pub fn locations(&self) -> Vec<Location> {
+        self.locations.clone()
+    }
+
     pub fn process(&self) -> Map {
-        let next_locations = self.locations
-            .iter()
+        let new_locations = self.locations.iter()
             .enumerate()
-            .map(|(i, l)| {
-                if let Location::Asteroid(None) = l {
-                    let x = (i % self.width) as i64;
-                    let y = (i / self.width) as i64;
-                    let mut hits = 0;
-                    let mut blacklist = vec![];
+            .map(|(p_i, pole)| {
+                let pole_coord = ((p_i % self.width) as f64, (p_i / self.width) as f64);
 
-                    for r_int in 1..self.width {
-                        let r = r_int as f64 - 0.4;
-                        let c = Circle::new_from_radius(r, &blacklist);
+                match pole {
+                    Location::Asteroid(None) => {
+                        let mut others: HashSet<i64> = HashSet::new();
 
-                        for (c_x, c_y) in c.get_coords() {
-                            let t_x = x + c_x;
-                            let t_y = y + c_y;
-
-                            if t_x < 0 || t_y < 0 {
+                        for (a_i, &ast) in self.locations.iter().enumerate() {
+                            if a_i == p_i {
                                 continue;
                             }
 
-                            if let Some(Location::Asteroid(a)) = self.get_loc(t_x as usize, t_y as usize) {
-                                hits += 1;
+                            if let Location::Asteroid(_) = ast {
+                                let ast_coord = ((a_i % self.width) as f64, (a_i / self.width) as f64);
 
-                                if t_x == x && t_y == y {
-                                    continue;
-                                }
+                                let (_length, angle) = calc_polar_coord(pole_coord, ast_coord);
 
-                                if let Some(v) = c.get_angles(c_x, c_y) {
-                                    for a in v {
-                                        blacklist.push(a);
-                                    }
-                                }
+                                others.insert((angle * 1000.0) as i64);
                             }
                         }
-                    }
-                    Location::Asteroid(Some(hits))
-                } else {
-                    *l
+
+                        Location::Asteroid(Some(others.len() as u64))
+                    },
+                    _ => *pole,
                 }
             })
             .collect();
 
-        Map::new(&next_locations, self.width, self.height)
+        Map::new(&new_locations, self.width, self.height)
+    }
+
+    pub fn get_highest_score(&self) -> Option<(i64, i64, u64)> {
+        let mut highest: Option<(i64, i64, u64)> = None;
+
+        for (i, loc) in self.locations.iter().enumerate() {
+            let x = (i % self.width) as i64;
+            let y = (i / self.width) as i64;
+
+            if let Location::Asteroid(Some(c)) = loc {
+                if let Some((_coord_x, _coord_y, cnt)) = highest {
+                    if *c > cnt {
+                        highest = Some((x, y, *c));
+                    }
+                } else {
+                    highest = Some((x, y, *c));
+                }
+            }
+        }
+
+        highest
     }
 }
 
@@ -90,7 +124,6 @@ impl fmt::Display for Map {
         let mut gfx = String::new();
 
         for y in 0..self.height {
-            let mut line: Vec<&str> = vec![];
             for x in 0..self.width {
                 let loc = self.get_loc(x, y);
 
@@ -106,10 +139,10 @@ impl fmt::Display for Map {
                         7 => '7',
                         8 => '8',
                         9 => '9',
-                        _ => 'x',
+                        _ => '+',
                     });
                 } else if let Some(Location::Asteroid(None)) = loc {
-                    gfx.push('o');
+                    gfx.push('#');
                 } else if let Some(Location::Space) = loc {
                     gfx.push('.');
                 }
@@ -141,113 +174,103 @@ pub fn input_generator(input: &str) -> Map {
 
 #[aoc(day10, part1)]
 pub fn solve_part1(input: &Map) -> u64 {
-    123
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Circle {
-    coords: HashMap<(i64, i64), Vec<i64>>,
-    radius: f64,
-}
-
-impl Circle {
-    pub fn new_from_radius(radius: f64, blacklist: &Vec<i64>) -> Circle {
-        let mut unit = vec![];
-
-        // Get unit circle coords
-        for a in 0..360_i64 {
-            if blacklist.contains(&a) {
-                continue;
-            }
-
-            let rads = (a as f64 * 2.0 * std::f64::consts::PI) / 360.0;
-
-            let x = rads.cos();
-            let y = rads.sin();
-
-            unit.push((x, y, a));
-        }
-
-        // Adapt to radius
-        let mut adapted: Vec<(f64, f64, i64)> = unit
-            .iter()
-            .map(|(x, y, a)| (x * radius, y * radius, *a))
-            .collect();
-
-        // Check which integer coords we hit
-        let mut hits: HashMap<(i64, i64), Vec<i64>> = HashMap::new();
-
-        for (x, y, a) in adapted {
-            let x_i = x.floor();
-            let y_i = y.floor();
-            let key = (x_i as i64, y_i as i64);
-
-            let default = &vec![];
-            let mut angles = hits.get(&key).unwrap_or(default).clone();
-            angles.push(a);
-
-            hits.insert(key, angles.to_vec());
-        }
-
-        Circle { coords: hits, radius }
-    }
-
-    pub fn get_coords(&self) -> HashSet<(i64, i64)> {
-        let mut out = HashSet::new();
-        for ((x, y), _) in &self.coords {
-            out.insert((*x, *y));
-        }
-        out
-    }
-
-    pub fn get_angles(&self, x: i64, y: i64) -> Option<Vec<i64>> {
-        self.coords.get(&(x, y)).map(|v| v.clone())
-    }
-}
-
-impl Display for Circle {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
-        let mut gfx = String::new();
-        let transpose_to = (self.radius.floor() * 2.0) as i64;
-        let to = (self.radius * 2.0).ceil() as i64;
-        let from = to * -1;
-
-        for y in from..=to {
-            for x in from..=to {
-                if let Some(n) = self.coords.get(&(x, y)) {
-                    gfx.push('#');
-                } else {
-                    gfx.push(' ');
-                }
-            }
-            gfx.push('\n');
-        }
-
-        write!(f, "{}", gfx)
-    }
+    input.process().get_highest_score().unwrap().2
 }
 
 #[cfg(test)]
 mod tests {
     use crate::day10::*;
-    use std::collections::HashSet;
 
     #[test]
-    fn test_that_it_processes_asteroids() {
-        let m1 = Map::new(&vec![
-            Location::Space, Location::Asteroid(None), Location::Space, Location::Space, Location::Asteroid(None),
-            Location::Space, Location::Space, Location::Space, Location::Space, Location::Space,
-            Location::Asteroid(None), Location::Asteroid(None), Location::Asteroid(None), Location::Asteroid(None), Location::Asteroid(None),
-            Location::Space, Location::Space, Location::Space, Location::Space, Location::Asteroid(None),
-            Location::Space, Location::Space, Location::Space, Location::Asteroid(None), Location::Asteroid(None),
-        ], 5, 5);
+    fn test_process_small() {
+        let input = ".#..#\n\
+                           .....\n\
+                           #####\n\
+                           ....#\n\
+                           ...##";
+        let map = input_generator(input).process();
 
-        println!("{}", m1);
+        println!("{}", map);
 
-        let m2 = m1.process();
+        assert_eq!(map.get_highest_score().unwrap(), (3, 4, 8));
+    }
 
-        println!("{}", m2);
+    #[test]
+    fn test_process_large1() {
+        let input = "......#.#.\n\
+                           #..#.#....\n\
+                           ..#######.\n\
+                           .#.#.###..\n\
+                           .#..#.....\n\
+                           ..#....#.#\n\
+                           #..#....#.\n\
+                           .##.#..###\n\
+                           ##...#..#.\n\
+                           .#....####";
+        let map = input_generator(input).process();
 
-        assert!(false);
+        assert_eq!(map.get_highest_score().unwrap(), (5, 8, 33));
+    }
+
+    #[test]
+    fn test_process_large2() {
+        let input = "#.#...#.#.\n\
+                           .###....#.\n\
+                           .#....#...\n\
+                           ##.#.#.#.#\n\
+                           ....#.#.#.\n\
+                           .##..###.#\n\
+                           ..#...##..\n\
+                           ..##....##\n\
+                           ......#...\n\
+                           .####.###.";
+        let map = input_generator(input).process();
+
+        assert_eq!(map.get_highest_score().unwrap(), (1, 2, 35));
+    }
+
+    #[test]
+    fn test_process_large3() {
+        let input = ".#..#..###\n\
+                           ####.###.#\n\
+                           ....###.#.\n\
+                           ..###.##.#\n\
+                           ##.##.#.#.\n\
+                           ....###..#\n\
+                           ..#.#..#.#\n\
+                           #..#.#.###\n\
+                           .##...##.#\n\
+                           .....#.#..";
+        let map = input_generator(input).process();
+
+        assert_eq!(map.get_highest_score().unwrap(), (6, 3, 41));
+    }
+
+    #[test]
+    fn test_process_large4() {
+        let input = ".#..##.###...#######\n\
+                           ##.############..##.\n\
+                           .#.######.########.#\n\
+                           .###.#######.####.#.\n\
+                           #####.##.#.##.###.##\n\
+                           ..#####..#.#########\n\
+                           ####################\n\
+                           #.####....###.#.#.##\n\
+                           ##.#################\n\
+                           #####.##.###..####..\n\
+                           ..######..##.#######\n\
+                           ####.##.####...##..#\n\
+                           .#####..#.######.###\n\
+                           ##...#.##########...\n\
+                           #.##########.#######\n\
+                           .####.#.###.###.#.##\n\
+                           ....##.##.###..#####\n\
+                           .#.#.###########.###\n\
+                           #.#.#.#####.####.###\n\
+                           ###.##.####.##.#..##";
+        let map = input_generator(input).process();
+
+        assert_eq!(map.get_highest_score().unwrap(), (11, 13, 210));
+
     }
 }

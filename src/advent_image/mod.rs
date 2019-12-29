@@ -73,7 +73,7 @@ pub struct Image {
 }
 
 /// ```
-/// use advent::advent_image::{merge_layers, Image, Pixel};
+/// use aoc_2019::advent_image::{merge_layers, Image, Pixel};
 /// let img = Image::new_from_ints(2, 2, &vec![0,2,2,2,1,1,2,2,2,2,1,2,0,0,0,0]).unwrap();
 /// let merged = merge_layers(&img).unwrap();
 ///
@@ -100,7 +100,7 @@ pub fn merge_layers(image: &Image) -> Result<Image, ImageErr> {
 }
 
 /// ```
-/// use advent::advent_image::{pixels_to_layers, Layer};
+/// use aoc_2019::advent_image::{pixels_to_layers, Layer};
 /// let layers = pixels_to_layers(3, 2, &vec![0,1,2,0,1,2,0,1,2,0,1,2]).unwrap();
 ///
 /// assert_eq!(layers[..], vec![Layer::new_from_ints(&vec![0,1,2,0,1,2]), Layer::new_from_ints(&vec![0,1,2,0,1,2])][..]);
