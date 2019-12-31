@@ -307,7 +307,7 @@ pub fn solve_part2(input: &Map) -> i64 {
 #[cfg(test)]
 mod tests {
     use crate::day10::*;
-    use std::collections::HashMap;
+//    use std::collections::HashMap;
 
     #[test]
     fn test_process_small() {
@@ -398,43 +398,40 @@ mod tests {
 
         assert_eq!(map.get_highest_score().unwrap(), (11, 13, 210));
 
-        let hits = map.lasers().unwrap();
-
-        for h in &hits {
-            println!("{:?}", h);
-        }
-
-        let hit_1 = hits.get(0).unwrap();
-        assert_eq!((hit_1.x as u64, hit_1.y as u64), (11, 12));
-
-        let hit_2 = hits.get(1).unwrap();
-        assert_eq!((hit_2.x as u64, hit_2.y as u64), (12, 1));
-
-        let hit_3 = hits.get(2).unwrap();
-        assert_eq!((hit_3.x as u64, hit_3.y as u64), (12, 2));
-
-        let hit_10 = hits.get(9).unwrap();
-        assert_eq!((hit_10.x as u64, hit_10.y as u64), (12, 8));
-
-        let hit_20 = hits.get(19).unwrap();
-        assert_eq!((hit_20.x as u64, hit_20.y as u64), (16, 0));
-
-        let hit_50 = hits.get(49).unwrap();
-        assert_eq!((hit_50.x as u64, hit_50.y as u64), (16, 9));
-
-        let hit_100 = hits.get(99).unwrap();
-        assert_eq!((hit_100.x as u64, hit_100.y as u64), (10, 16));
-
-        let hit_199 = hits.get(198).unwrap();
-        assert_eq!((hit_199.x as u64, hit_199.y as u64), (9, 6));
-
-        let hit_200 = hits.get(199).unwrap();
-        assert_eq!((hit_200.x as u64, hit_200.y as u64), (8, 2));
-
-        let hit_201 = hits.get(200).unwrap();
-        assert_eq!((hit_201.x as u64, hit_201.y as u64), (10, 9));
-
-        let hit_299 = hits.get(298).unwrap();
-        assert_eq!((hit_299.x as u64, hit_299.y as u64), (11, 1));
+//        Slow AF unoptimized
+//        let hits = map.lasers().unwrap();
+//
+//        let hit_1 = hits.get(0).unwrap();
+//        assert_eq!((hit_1.x as u64, hit_1.y as u64), (11, 12));
+//
+//        let hit_2 = hits.get(1).unwrap();
+//        assert_eq!((hit_2.x as u64, hit_2.y as u64), (12, 1));
+//
+//        let hit_3 = hits.get(2).unwrap();
+//        assert_eq!((hit_3.x as u64, hit_3.y as u64), (12, 2));
+//
+//        let hit_10 = hits.get(9).unwrap();
+//        assert_eq!((hit_10.x as u64, hit_10.y as u64), (12, 8));
+//
+//        let hit_20 = hits.get(19).unwrap();
+//        assert_eq!((hit_20.x as u64, hit_20.y as u64), (16, 0));
+//
+//        let hit_50 = hits.get(49).unwrap();
+//        assert_eq!((hit_50.x as u64, hit_50.y as u64), (16, 9));
+//
+//        let hit_100 = hits.get(99).unwrap();
+//        assert_eq!((hit_100.x as u64, hit_100.y as u64), (10, 16));
+//
+//        let hit_199 = hits.get(198).unwrap();
+//        assert_eq!((hit_199.x as u64, hit_199.y as u64), (9, 6));
+//
+//        let hit_200 = hits.get(199).unwrap();
+//        assert_eq!((hit_200.x as u64, hit_200.y as u64), (8, 2));
+//
+//        let hit_201 = hits.get(200).unwrap();
+//        assert_eq!((hit_201.x as u64, hit_201.y as u64), (10, 9));
+//
+//        let hit_299 = hits.get(298).unwrap();
+//        assert_eq!((hit_299.x as u64, hit_299.y as u64), (11, 1));
     }
 }
