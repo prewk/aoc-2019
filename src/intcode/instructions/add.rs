@@ -9,13 +9,16 @@ pub struct Add {
 
 impl Instruction for Add {
     fn run(&self, program: Program) -> Result<Program, ProgramErr> {
+
         let left_val = match self.left.0 {
-            Mode::Parameter => *program.ints.get(self.left.1 as usize).ok_or(ProgramErr::Missing { i: self.left.1 as usize })?,
+//            Mode::Parameter => *program.ints.get(self.left.1 as usize).ok_or(ProgramErr::Missing { i: self.left.1 as usize })?,
+            Mode::Parameter => *program.ints.get(self.left.1 as usize).unwrap_or(&0),
             Mode::Immediate => self.left.1,
             Mode::Relative => *program.ints.get((program.rel_base() + self.left.1) as usize).ok_or(ProgramErr::Missing { i: self.left.1 as usize })?,
         };
         let right_val = match self.right.0 {
-            Mode::Parameter => *program.ints.get(self.right.1 as usize).ok_or(ProgramErr::Missing { i: self.right.1 as usize })?,
+//            Mode::Parameter => *program.ints.get(self.right.1 as usize).ok_or(ProgramErr::Missing { i: self.right.1 as usize })?,
+            Mode::Parameter => *program.ints.get(self.right.1 as usize).unwrap_or(&0),
             Mode::Immediate => self.right.1,
             Mode::Relative => *program.ints.get((program.rel_base() + self.right.1) as usize).ok_or(ProgramErr::Missing { i: self.right.1 as usize })?,
         };

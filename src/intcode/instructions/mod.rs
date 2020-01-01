@@ -33,6 +33,8 @@ pub enum ProgramErr {
     IntOutOfBounds { i: usize },
     #[fail(display = "Expected input, found None")]
     ExpectedInput,
+    #[fail(display = "Expected output, found None")]
+    ExpectedOutput,
     #[fail(display = "Encountered opcode {} doesn't match expected {}", found, expected)]
     OpcodeMismatch { expected: i64, found: i64 },
     #[fail(display = "Infinite loop detected")]
@@ -82,6 +84,13 @@ impl Program {
     pub fn outputs(&self) -> Vec<i64> { self.outputs.clone() }
 
     pub fn inputs(&self) -> Vec<i64> { self.inputs.clone() }
+
+    pub fn push_input(&self, val: i64) -> Program {
+        let mut inputs = self.inputs.clone();
+        inputs.push(val);
+
+        Program { ints: self.ints.clone(), pointer: self.pointer, outputs: self.outputs.clone(), inputs, has_exited: false, rel_base: self.rel_base }
+    }
 
     pub fn consume_input(&self) -> Program {
         let mut less_inputs = vec![];

@@ -13,7 +13,7 @@ use crate::intcode::instructions::offset::RelBaseOffset;
 pub mod instructions;
 
 #[derive(Debug)]
-enum InstrType {
+pub enum InstrType {
     Add(Add),
     Mul(Mul),
     Input(Input),
@@ -26,7 +26,7 @@ enum InstrType {
     Exit(Exit),
 }
 
-fn get_instruction(program: &Program) -> Result<InstrType, ProgramErr> {
+pub fn get_instruction(program: &Program) -> Result<InstrType, ProgramErr> {
     let code = *program.peek().ok_or(ProgramErr::Missing { i: program.get_pointer() })?;
 
     if Add::test(code) {
@@ -53,6 +53,7 @@ fn get_instruction(program: &Program) -> Result<InstrType, ProgramErr> {
         Err(ProgramErr::InvalidInstruction { instr: code })
     }
 }
+
 
 pub fn run_program(program_ints: &Vec<i64>, inputs: &Vec<i64>) -> Result<Program, ProgramErr> {
     let mut program = Program::new(program_ints.clone(), 0, vec![], inputs.clone(), 0);
