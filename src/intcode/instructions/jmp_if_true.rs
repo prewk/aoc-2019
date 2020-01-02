@@ -9,15 +9,15 @@ pub struct JmpIfTrue {
 impl Instruction for JmpIfTrue {
     fn run(&self, program: Program) -> Result<Program, ProgramErr> {
         let val = match self.val.0 {
-            Mode::Parameter => *program.ints.get(self.val.1 as usize).ok_or(ProgramErr::Missing { i: self.val.1 as usize })?,
+            Mode::Parameter => program.get_int(self.val.1),
             Mode::Immediate => self.val.1,
-            Mode::Relative => *program.ints.get((program.rel_base() + self.val.1) as usize).ok_or(ProgramErr::Missing { i: self.val.1 as usize })?,
+            Mode::Relative => program.get_rel_int(self.val.1),
         };
         let target = match self.target.0 {
-            Mode::Parameter => *program.ints.get(self.target.1 as usize).ok_or(ProgramErr::Missing { i: self.target.1 as usize })?,
+            Mode::Parameter => program.get_int(self.target.1),
             Mode::Immediate => self.target.1,
-            Mode::Relative => *program.ints.get((program.rel_base() + self.target.1) as usize).ok_or(ProgramErr::Missing { i: self.target.1 as usize })?,
-        } as usize;
+            Mode::Relative => program.get_rel_int(self.target.1),
+        };
 
         if val != 0 {
             Ok(program.set_pointer(target))
@@ -32,7 +32,7 @@ impl Instruction for JmpIfTrue {
 
     fn new(program: &Program) -> Result<Self, ProgramErr> where Self: std::marker::Sized {
         let ints = program.get_ints(3)?;
-        let opcode = parse_opcode(ints[0])?;
+        let opcode = parse_opcode(*ints.get(0).ok_or(ProgramErr::Missing { i: 0 })?)?;
         if !JmpIfTrue::test(opcode.opcode) {
             return Err(ProgramErr::OpcodeMismatch { expected: 5, found: opcode.opcode })
         }
@@ -82,8 +82,8 @@ mod tests {
 
         let program = jump_if_true.run(program).unwrap();
 
-        assert_eq!(program.ints[..], vec![1105, 1, 3, 666][..]);
         assert_eq!(program.pointer, 3);
+        assert_eq!(program.set_pointer(0).get_ints(4).unwrap()[..], vec![1105, 1, 3, 666][..]);
         assert!(program.outputs.is_empty());
     }
 }

@@ -85,19 +85,19 @@ mod tests {
     #[test]
     fn test_run_program() {
         assert_eq!(
-            run_program(&vec![1,0,0,0,99], &vec![]).unwrap().ints()[..],
+            run_program(&vec![1,0,0,0,99], &vec![]).unwrap().set_pointer(0).get_ints(5).unwrap()[..],
             vec![2,0,0,0,99][..]
         );
         assert_eq!(
-            run_program(&vec![2,3,0,3,99], &vec![]).unwrap().ints()[..],
+            run_program(&vec![2,3,0,3,99], &vec![]).unwrap().set_pointer(0).get_ints(5).unwrap()[..],
             vec![2,3,0,6,99][..]
         );
         assert_eq!(
-            run_program(&vec![2,4,4,5,99,0], &vec![]).unwrap().ints()[..],
+            run_program(&vec![2,4,4,5,99,0], &vec![]).unwrap().set_pointer(0).get_ints(6).unwrap()[..],
             vec![2,4,4,5,99,9801][..]
         );
         assert_eq!(
-            run_program(&vec![1,1,1,4,99,5,6,0,99], &vec![]).unwrap().ints()[..],
+            run_program(&vec![1,1,1,4,99,5,6,0,99], &vec![]).unwrap().set_pointer(0).get_ints(9).unwrap()[..],
             vec![30,1,1,4,2,5,6,0,99][..]
         );
         assert_eq!(

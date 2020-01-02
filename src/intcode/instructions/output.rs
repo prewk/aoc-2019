@@ -8,9 +8,9 @@ pub struct Output {
 impl Instruction for Output {
     fn run(&self, program: Program) -> Result<Program, ProgramErr> {
         let val = match self.val.0 {
-            Mode::Parameter => *program.ints.get(self.val.1 as usize).ok_or(ProgramErr::Missing { i: self.val.1 as usize })?,
+            Mode::Parameter => program.get_int(self.val.1),
             Mode::Immediate => self.val.1,
-            Mode::Relative => *program.ints.get((program.rel_base() + self.val.1) as usize).ok_or(ProgramErr::Missing { i: self.val.1 as usize })?,
+            Mode::Relative => program.get_rel_int(self.val.1),
         };
 
         Ok(
@@ -26,7 +26,7 @@ impl Instruction for Output {
 
     fn new(program: &Program) -> Result<Self, ProgramErr> where Self: std::marker::Sized {
         let ints = program.get_ints(2)?;
-        let opcode = parse_opcode(ints[0])?;
+        let opcode = parse_opcode(*ints.get(0).ok_or(ProgramErr::Missing { i: 0 })?)?;
         if !Output::test(opcode.opcode) {
             return Err(ProgramErr::OpcodeMismatch { expected: 4, found: opcode.opcode })
         }
@@ -74,8 +74,8 @@ mod tests {
 
         let program = output.run(program).unwrap();
 
-        assert_eq!(program.ints[..], vec![1, 2, 3, 4, 5, 666, 123][..]);
         assert_eq!(program.pointer, 5);
+        assert_eq!(program.set_pointer(0).get_ints(7).unwrap()[..], vec![1, 2, 3, 4, 5, 666, 123][..]);
         assert_eq!(program.outputs[..], vec![666][..]);
     }
 }

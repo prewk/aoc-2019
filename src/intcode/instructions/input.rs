@@ -13,7 +13,7 @@ impl Instruction for Input {
             Mode::Parameter => self.target.1,
             Mode::Immediate => { return Err(ProgramErr::NeverImmediate); },
             Mode::Relative => program.rel_base() + self.target.1,
-        } as usize;
+        };
 
         Ok(program
             .set_ints(target, val)
@@ -28,7 +28,7 @@ impl Instruction for Input {
     fn new(program: &Program) -> Result<Self, ProgramErr> where Self: std::marker::Sized {
         let ints = program.get_ints(2)?;
 
-        let opcode = parse_opcode(ints[0])?;
+        let opcode = parse_opcode(*ints.get(0).ok_or(ProgramErr::Missing { i: 0 })?)?;
         if !Input::test(opcode.opcode) {
             return Err(ProgramErr::OpcodeMismatch { expected: 3, found: opcode.opcode })
         }
@@ -76,8 +76,8 @@ mod tests {
 
         let program = input.run(program).unwrap();
 
-        assert_eq!(program.ints[..], vec![123, 2, 3, 0, 666][..]);
         assert_eq!(program.pointer, 4);
+        assert_eq!(program.set_pointer(0).get_ints(5).unwrap()[..], vec![123, 2, 3, 0, 666][..]);
         assert!(program.outputs.is_empty());
     }
 

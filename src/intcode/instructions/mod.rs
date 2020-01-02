@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub mod add;
 pub mod mul;
 pub mod input;
@@ -11,8 +13,8 @@ pub mod offset;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Program {
-    ints: Vec<i64>,
-    pointer: usize,
+    ints: HashMap<i64, i64>,
+    pointer: i64,
     inputs: Vec<i64>,
     outputs: Vec<i64>,
     has_exited: bool,
@@ -24,7 +26,7 @@ pub enum ProgramErr {
     #[fail(display = "Can't construct {} from {:?}", kind, ints)]
     Unconstructable { kind: String, ints: Vec<i64> },
     #[fail(display = "Missing item {}", i)]
-    Missing { i: usize },
+    Missing { i: i64 },
     #[fail(display = "Couldn't construct modes from {:?}", v)]
     InvalidMode { v: Vec<i64> },
     #[fail(display = "Failed parsing instruction: {:?}", instr)]
@@ -65,7 +67,16 @@ pub trait Instruction {
 }
 
 impl Program {
-    pub fn new (ints: Vec<i64>, pointer: usize, outputs: Vec<i64>, inputs: Vec<i64>, rel_base: i64) -> Program {
+    pub fn new(ints: Vec<i64>, pointer: i64, outputs: Vec<i64>, inputs: Vec<i64>, rel_base: i64) -> Program {
+        let mut h_ints = HashMap::new();
+        for (i, v) in ints.iter().enumerate() {
+            h_ints.insert(i as i64, *v);
+        }
+
+        Program { ints: h_ints, pointer, outputs, inputs, has_exited: false, rel_base }
+    }
+
+    pub fn new_h(ints: HashMap<i64, i64>, pointer: i64, outputs: Vec<i64>, inputs: Vec<i64>, rel_base: i64) -> Program {
         Program { ints, pointer, outputs, inputs, has_exited: false, rel_base }
     }
 
@@ -77,7 +88,18 @@ impl Program {
         self.has_exited
     }
 
-    pub fn ints(&self) -> Vec<i64> {
+    pub fn as_vec(&self, start_at: i64, len: i64) -> Vec<i64> {
+        let mut v = vec![];
+        for i in start_at..(start_at + len) {
+            let o = self.ints.get(&i);
+            if o.is_some() {
+                v.push(*o.unwrap());
+            }
+        }
+        v
+    }
+
+    pub fn ints(&self) -> HashMap<i64, i64> {
         self.ints.clone()
     }
 
@@ -103,32 +125,26 @@ impl Program {
         Program { ints: self.ints.clone(), pointer: self.pointer, outputs: self.outputs.clone(), inputs: less_inputs, has_exited: false, rel_base: self.rel_base }
     }
 
-    pub fn pointer(&self) -> usize { self.pointer }
+    pub fn pointer(&self) -> i64 { self.pointer }
 
-    pub fn set_ints(&self, index: usize, val: i64) -> Program {
-        let mut ints: Vec<i64> = vec![];
-        for (i, v) in self.ints.iter().enumerate() {
-            if i == index {
-                ints.push(val);
-            } else {
-                ints.push(v.clone());
-            }
-        }
+    pub fn set_ints(&self, index: i64, val: i64) -> Program {
+        let mut ints: HashMap<i64, i64> = self.ints.clone();
+        ints.insert(index, val);
 
-        Program::new(ints, self.pointer, self.outputs.clone(), self.inputs.clone(), self.rel_base)
+        Program::new_h(ints, self.pointer, self.outputs.clone(), self.inputs.clone(), self.rel_base)
     }
 
     fn set_rel_base(&self, rel_base: i64) -> Program {
-        Program::new(self.ints.clone(), self.pointer, self.outputs.clone(), self.inputs.clone(), rel_base)
+        Program { ints: self.ints.clone(), pointer: self.pointer, outputs: self.outputs.clone(), inputs: self.inputs.clone(), has_exited: false, rel_base }
     }
 
     pub fn rel_base(&self) -> i64 { self.rel_base }
 
-    fn set_pointer(&self, pointer: usize) -> Program {
-        Program::new(self.ints.clone(), pointer, self.outputs.clone(), self.inputs.clone(), self.rel_base)
+    pub fn set_pointer(&self, pointer: i64) -> Program {
+        Program { ints: self.ints.clone(), pointer, outputs: self.outputs.clone(), inputs: self.inputs.clone(), has_exited: false, rel_base: self.rel_base }
     }
 
-    pub fn get_pointer(&self) -> usize {
+    pub fn get_pointer(&self) -> i64 {
         self.pointer
     }
 
@@ -136,19 +152,28 @@ impl Program {
         let mut outputs = self.outputs.clone();
         outputs.push(output);
 
-        Program::new(self.ints.clone(), self.pointer, outputs, self.inputs.clone(), self.rel_base)
+        Program { ints: self.ints.clone(), pointer: self.pointer, outputs, inputs: self.inputs.clone(), has_exited: false, rel_base: self.rel_base }
     }
 
-    fn get_ints(&self, size: usize) -> Result<&[i64], ProgramErr> {
-        if self.pointer + size > self.ints.len() {
-            Err(ProgramErr::IntOutOfBounds { i: self.pointer + size })
-        } else {
-            Ok(&self.ints[self.pointer..(self.pointer + size)])
+    pub fn get_int(&self, index: i64) -> i64 {
+        *self.ints.get(&index).unwrap_or(&0)
+    }
+
+    pub fn get_rel_int(&self, index: i64) -> i64 {
+        self.get_int(self.rel_base + index)
+    }
+
+    pub fn get_ints(&self, size: usize) -> Result<Vec<i64>, ProgramErr> {
+        let mut captured = vec![];
+        for i in self.pointer..(self.pointer + size as i64) {
+            captured.push(*self.ints.get(&i).unwrap_or(&0));
         }
+
+        Ok(captured)
     }
 
     pub fn peek(&self) -> Option<&i64> {
-        self.ints.get(self.pointer)
+        self.ints.get(&self.pointer)
     }
 }
 

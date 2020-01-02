@@ -18,19 +18,19 @@ pub fn solve_part1(input: &[i64]) -> i64 {
 
     let res = run_program(&mut_input, &vec![]).unwrap();
 
-    *res.ints().get(0).unwrap()
+    *res.ints().get(&0).unwrap()
 }
 
 pub fn replace_and_process(program: &Program, noun: i64, verb: i64) -> i64 {
     let nouned = program.set_ints(1, noun);
     let verbed = nouned.set_ints(2, verb);
 
-    let res = run_program(&verbed.ints(), &vec![]).unwrap();
+    let res = run_program(&verbed.as_vec(0, 1000), &vec![]).unwrap();
 
-    res
-        .ints()
+
+    *res
+        .as_vec(0, 1)
         .first()
-        .map(|i| *i)
         .unwrap()
 }
 

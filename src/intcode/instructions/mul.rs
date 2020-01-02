@@ -10,22 +10,20 @@ pub struct Mul {
 impl Instruction for Mul {
     fn run(&self, program: Program) -> Result<Program, ProgramErr> {
         let left_val = match self.left.0 {
-//            Mode::Parameter => *program.ints.get(self.left.1 as usize).ok_or(ProgramErr::Missing { i: self.left.1 as usize })?,
-            Mode::Parameter => *program.ints.get(self.left.1 as usize).unwrap_or(&0),
+            Mode::Parameter => program.get_int(self.left.1),
             Mode::Immediate => self.left.1,
-            Mode::Relative => *program.ints.get((program.rel_base() + self.left.1) as usize).ok_or(ProgramErr::Missing { i: self.left.1 as usize })?,
+            Mode::Relative => program.get_rel_int(self.left.1),
         };
         let right_val = match self.right.0 {
-//            Mode::Parameter => *program.ints.get(self.right.1 as usize).ok_or(ProgramErr::Missing { i: self.right.1 as usize })?,
-            Mode::Parameter => *program.ints.get(self.right.1 as usize).unwrap_or(&0),
+            Mode::Parameter => program.get_int(self.right.1),
             Mode::Immediate => self.right.1,
-            Mode::Relative => *program.ints.get((program.rel_base() + self.right.1) as usize).ok_or(ProgramErr::Missing { i: self.right.1 as usize })?,
+            Mode::Relative => program.get_rel_int(self.right.1),
         };
         let target = match self.target.0 {
             Mode::Parameter => self.target.1,
             Mode::Immediate => { return Err(ProgramErr::NeverImmediate); },
             Mode::Relative => program.rel_base() + self.target.1,
-        } as usize;
+        };
 
         Ok(
             program
@@ -40,7 +38,7 @@ impl Instruction for Mul {
 
     fn new(program: &Program) -> Result<Self, ProgramErr> where Self: std::marker::Sized {
         let ints = program.get_ints(4)?;
-        let opcode = parse_opcode(ints[0])?;
+        let opcode = parse_opcode(*ints.get(0).ok_or(ProgramErr::Missing { i: 0 })?)?;
         if !Mul::test(opcode.opcode) {
             return Err(ProgramErr::OpcodeMismatch { expected: 2, found: opcode.opcode })
         }
@@ -92,8 +90,8 @@ mod tests {
 
         let program = mul.run(program).unwrap();
 
-        assert_eq!(program.ints[..], vec![6, 2, 3, 2, 1, 2, 0][..]);
         assert_eq!(program.pointer, 7);
+        assert_eq!(program.set_pointer(0).get_ints(7).unwrap()[..], vec![6, 2, 3, 2, 1, 2, 0][..]);
         assert!(program.outputs.is_empty());
     }
 }

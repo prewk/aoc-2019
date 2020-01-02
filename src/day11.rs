@@ -89,6 +89,7 @@ impl Ship {
     pub fn get_robot_pos(&self) -> Coords { self.robot_pos }
     pub fn get_robot_dir(&self) -> Direction { self.robot_dir }
     pub fn get_painted_panel_cnt(&self) -> usize { self.panels.len() }
+    pub fn get_panels(&self) -> &HashMap<Coords, Color> { &self.panels }
 
     fn paint_panel_and_set_direction(&self, color: Color, dir: Direction) -> Ship {
         let mut panels = self.panels.clone();
@@ -106,71 +107,80 @@ impl Ship {
     }
 }
 
+fn format_panels(panels: &HashMap<Coords, Color>) -> String {
+    let mut min_x: Option<i64> = None;
+    let mut max_x: Option<i64> = None;
+    let mut min_y: Option<i64> = None;
+    let mut max_y: Option<i64> = None;
+
+    for ((x, y), _color) in panels {
+        if let None = min_x {
+            min_x = Some(*x);
+        } else if let Some(cmp_x) = min_x {
+            if *x < cmp_x { min_x = Some(*x); }
+        }
+
+        if let None = max_x {
+            max_x = Some(*x);
+        } else if let Some(cmp_x) = max_x {
+            if *x > cmp_x { max_x = Some(*x); }
+        }
+
+        if let None = min_y {
+            min_y = Some(*y);
+        } else if let Some(cmp_y) = min_y {
+            if *y < cmp_y { min_y = Some(*y); }
+        }
+
+        if let None = max_y {
+            max_y = Some(*y)
+        } else if let Some(cmp_y) = max_y {
+            if *y > cmp_y { max_y = Some(*y); }
+        }
+    }
+
+    let mut gfx = String::new();
+    gfx.push('\n');
+
+    for y in (min_y.unwrap()..=max_y.unwrap()).rev() { // ???
+        for x in min_x.unwrap()..=max_x.unwrap() {
+            gfx.push(match panels.get(&(x, y)) {
+                None => '.',
+                Some(Color::Black) => '.',
+                Some(Color::White) => '#',
+            });
+        }
+        gfx.push('\n');
+    }
+
+    gfx
+}
+
 impl std::fmt::Display for Ship {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
-        let mut min_x: Option<i64> = None;
-        let mut max_x: Option<i64> = None;
-        let mut min_y: Option<i64> = None;
-        let mut max_y: Option<i64> = None;
+        let s = format_panels(&self.panels);
 
-        for ((x, y), _color) in &self.panels {
-            if let None = min_x {
-                min_x = Some(*x);
-            } else if let Some(cmp_x) = min_x {
-                if *x < cmp_x { min_x = Some(*x); }
-            }
-
-            if let None = max_x {
-                max_x = Some(*x);
-            } else if let Some(cmp_x) = max_x {
-                if *x > cmp_x { max_x = Some(*x); }
-            }
-
-            if let None = min_y {
-                min_y = Some(*y);
-            } else if let Some(cmp_y) = min_y {
-                if *y < cmp_y { min_y = Some(*y); }
-            }
-
-            if let None = max_y {
-                max_y = Some(*y)
-            } else if let Some(cmp_y) = max_y {
-                if *y > cmp_y { max_y = Some(*y); }
-            }
-        }
-
-        let mut gfx = String::new();
-
-        for y in min_y.unwrap()..max_y.unwrap() {
-            for x in min_x.unwrap()..max_x.unwrap() {
-                gfx.push(match self.panels.get(&(x, y)) {
-                    None => '.',
-                    Some(Color::Black) => '.',
-                    Some(Color::White) => '#',
-                });
-            }
-            gfx.push('\n');
-        }
-
-        write!(f, "{}", gfx)
+        write!(f, "{}", s)
     }
 }
 
-pub fn run(program_ints: &Vec<i64>) -> Result<Ship, ProgramErr> {
+pub fn run(program_ints: &Vec<i64>, start: Color) -> Result<Ship, ProgramErr> {
     let mut ship = Ship::new(&HashMap::new(), Direction::Up, (0, 0));
 
     let mut program = Program::new(
         program_ints.clone(),
         0,
         vec![],
-        vec![color_to_int(ship.get_color((0, 0)))],
+        vec![color_to_int(start)],
         0
     );
 
     let mut col_dir: (Option<i64>, Option<i64>) = (None, None);
 
     loop {
-        program = match get_instruction(&program)? {
+        let instruction = get_instruction(&program)?;
+
+        program = match instruction {
             InstrType::Add(instr) => instr.run(program)?,
             InstrType::Mul(instr) => instr.run(program)?,
             InstrType::Input(instr) => instr.run(program)?,
@@ -225,7 +235,14 @@ pub fn input_generator(input: &str) -> Vec<i64> {
 
 #[aoc(day11, part1)]
 pub fn solve_part1(input: &[i64]) -> usize {
-    let ship = run(&input.to_vec()).unwrap();
+    let ship = run(&input.to_vec(), Color::Black).unwrap();
 
     ship.get_painted_panel_cnt()
+}
+
+#[aoc(day11, part2)]
+pub fn solve_part2(input: &[i64]) -> String {
+    let ship = run(&input.to_vec(), Color::White).unwrap();
+
+    format_panels(&ship.get_panels())
 }
