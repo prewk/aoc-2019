@@ -5,6 +5,7 @@ extern crate line_intersection;
 extern crate image;
 #[macro_use] extern crate aoc_runner_derive;
 extern crate voca_rs;
+extern crate termion;
 
 pub mod intcode;
 pub mod advent_image;
@@ -21,5 +22,6 @@ pub mod day9;
 pub mod day10;
 pub mod day11;
 pub mod day12;
+pub mod day13;
 
 aoc_lib!{ year = 2019 }

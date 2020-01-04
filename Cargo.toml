@@ -14,4 +14,4 @@ voca_rs = "*"
 geo = "0.4"
 line_intersection = "0.4.0"
 image = "0.23.0-preview.0"
-
+termion = "1.5.4"
