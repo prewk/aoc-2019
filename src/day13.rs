@@ -87,7 +87,7 @@ pub fn print_screen_with_termion(scr: &Screen) {
                 None => '?',
             };
 
-            write!(stdout, "{}{}", termion::cursor::Goto(x as u16, y as u16), char);
+            write!(stdout, "{}{}", termion::cursor::Goto(x as u16, y as u16), char).unwrap();
         }
     }
 }
