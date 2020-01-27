@@ -264,21 +264,30 @@ pub fn gather_ore_types(node: &ChemNode) -> HashMap<String, f64> {
 }
 
 /// ```
-/// use aoc_2019::day14::{to_chem_tree, Reaction, OrePriceList, calc_ore};
+/// use aoc_2019::day14::{to_chem_tree, Reaction, OrePriceList, calc_ore, input_generator};
 ///
-/// let reactions = vec![
-///     Reaction::new(&vec![(10, "ORE".to_string())], &(10, "A".to_string())),
-///     Reaction::new(&vec![(1, "ORE".to_string())], &(1, "B".to_string())),
-///     Reaction::new(&vec![(7, "A".to_string()), (1, "B".to_string())], &(1, "C".to_string())),
-///     Reaction::new(&vec![(7, "A".to_string()), (1, "C".to_string())], &(1, "D".to_string())),
-///     Reaction::new(&vec![(7, "A".to_string()), (1, "D".to_string())], &(1, "E".to_string())),
-///     Reaction::new(&vec![(7, "A".to_string()), (1, "E".to_string())], &(1, "FUEL".to_string())),
-/// ];
+/// let reactions1 = input_generator("10 ORE => 10 A\n\
+///                                  1 ORE => 1 B\n\
+///                                  7 A, 1 B => 1 C\n\
+///                                  7 A, 1 C => 1 D\n\
+///                                  7 A, 1 D => 1 E\n\
+///                                  7 A, 1 E => 1 FUEL");
 ///
-/// assert_eq!(calc_ore(&reactions).unwrap(), 31);
+/// assert_eq!(calc_ore(&reactions1).unwrap(), 31);
+///
+/// let reactions2 = input_generator("9 ORE => 2 A\n\
+///                                   8 ORE => 3 B\n\
+///                                   7 ORE => 5 C\n\
+///                                   3 A, 4 B => 1 AB\n\
+///                                   5 B, 7 C => 1 BC\n\
+///                                   4 C, 1 A => 1 CA\n\
+///                                   2 AB, 3 BC, 4 CA => 1 FUEL");
+///
+/// assert_eq!(calc_ore(&reactions2).unwrap(), 165);
 /// ```
 pub fn calc_ore(reactions: &Vec<Reaction>) -> Option<usize> {
     let price_list = OrePriceList::new(&reactions);
+    println!("{:?}", price_list);
     let fuel_i = reactions.iter().position(|r| r.to().1 == "FUEL".to_string())?;
     let node = to_chem_tree(&reactions, fuel_i, &price_list, None);
     let ore_types = gather_ore_types(&node);
